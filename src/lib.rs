@@ -12,30 +12,33 @@ impl School {
         }
     }
 
-    pub fn add(&mut self, grade: u32, student: &str) {
-        for (_, students) in self.students_by_grade.iter() {
-            if students.contains(student) {
-                return;
+    fn is_student_in_any_grade(&self, name: &str) -> bool {
+        for (_grade, students) in self.students_by_grade.iter() {
+            if students.contains(name) {
+                return true;
             }
+        }
+        false
+    }
+
+    pub fn add(&mut self, grade: u32, name: &str) {
+        if self.is_student_in_any_grade(name) {
+            return;
         }
 
         self.students_by_grade
             .entry(grade)
             .or_default()
-            .insert(student.to_string());
+            .insert(name.to_string());
     }
 
     pub fn grades(&self) -> Vec<u32> {
         self.students_by_grade.keys().copied().collect()
     }
 
-    // If `grade` returned a reference, `School` would be forced to keep a `Vec<String>`
-    // internally to lend out. By returning an owned vector of owned `String`s instead,
-    // the internal structure can be completely arbitrary. The tradeoff is that some data
-    // must be copied each time `grade` is called.
     pub fn grade(&self, grade: u32) -> Vec<String> {
         match self.students_by_grade.get(&grade) {
-            Some(students) => students.iter().map(|s| s.to_string()).collect(),
+            Some(students) => students.iter().cloned().collect(),
             None => vec![],
         }
     }
